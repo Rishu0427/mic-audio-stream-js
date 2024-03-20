@@ -16,14 +16,30 @@ let delayNode;
 
 function initAudio() {
   audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  delayNode = audioContext.createDelay(0.1); // Adjust the delay time here (in seconds)
+  delayNode = audioContext.createDelay(0.5); // Adjust the delay time here (in seconds)
 }
 
-function toggleAudio() {
+async function toggleAudio() {
+
+
   if (!isPlaying) {
     initAudio();
-    navigator.mediaDevices.getUserMedia({ audio: true })
+
+            const ctx = new AudioContext();
+
+    navigator.mediaDevices.getUserMedia( {audio: {
+    noiseSuppression: true,
+    echoCancellation: true, // Optional: Enable echo cancellation
+  }})
       .then(function(stream) {
+            const gainNode = ctx.createGain();
+            const audioDest = ctx.createMediaStreamDestination();
+            const source = ctx.createMediaStreamSource(stream);
+
+            // gainNode is set to 0.5
+            gainNode.connect(audioDest);
+            gainNode.gain.value = 0.5;   
+            source.connect(gainNode);
         mediaStreamSource = audioContext.createMediaStreamSource(stream);
         mediaStreamSource.connect(delayNode);
         delayNode.connect(audioContext.destination);
