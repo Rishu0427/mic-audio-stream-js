@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mic to Speaker</title>
+<title>Mic to Speaker with Delay</title>
 </head>
 <body>
 <button onclick="toggleAudio()">Toggle Audio</button>
@@ -12,9 +12,11 @@
 let audioContext;
 let mediaStreamSource;
 let isPlaying = false;
+let delayNode;
 
 function initAudio() {
   audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  delayNode = audioContext.createDelay(0.1); // Adjust the delay time here (in seconds)
 }
 
 function toggleAudio() {
@@ -23,7 +25,8 @@ function toggleAudio() {
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(function(stream) {
         mediaStreamSource = audioContext.createMediaStreamSource(stream);
-        mediaStreamSource.connect(audioContext.destination);
+        mediaStreamSource.connect(delayNode);
+        delayNode.connect(audioContext.destination);
         isPlaying = true;
       })
       .catch(function(err) {
@@ -32,6 +35,7 @@ function toggleAudio() {
   } else {
     if (mediaStreamSource) {
       mediaStreamSource.disconnect();
+      delayNode.disconnect();
       isPlaying = false;
     }
   }
