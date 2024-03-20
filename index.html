@@ -1,3 +1,4 @@
+<!-- with delay -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,19 +6,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mic to Speaker with Delay</title>
 </head>
+<style>
+  .divices-container{
+
+  }
+  .divices-container #select-audioDevices{
+    width: 200px;
+    background-color: aqua;
+  }
+</style>
 <body>
-<button onclick="toggleAudio()">Toggle Audio</button>
+  <div class="divices-container">
+      <label for="audioDevices">Select Audio Input Device:</label>
+      <select id="select-audioDevices">
+        <option value=""></option>
+      </select>  
+  </div>
+  <div class="button-container">
+    <button onclick="toggleAudio()">Toggle Audio</button>
+  </div>
 
 <script>
+
 let audioContext;
 let mediaStreamSource;
 let isPlaying = false;
 let delayNode;
+let audioDevicesSelect;
+let audioDevices = [];
 
 function initAudio() {
   audioContext = new (window.AudioContext || window.webkitAudioContext)();
   delayNode = audioContext.createDelay(0.5); // Adjust the delay time here (in seconds)
 }
+
+window.onload = function() {
+    getAudioDevices();
+}
+
+function getAudioDevices () {
+  audioDevicesSelect = document.getElementById('select-audioDevices');
+  console.log("getting devices");
+  navigator.mediaDevices.enumerateDevices()	
+    .then((devices) => {	
+      devices.forEach((device) => {	
+        switch(device.kind) {	
+          case 'audioinput':	{
+          const option = document.createElement('option');
+            option.value = device.deviceId;
+            option.text = device.label || `Microphone ${index + 1}`;
+            audioDevicesSelect.appendChild(option);
+          }
+          break;		
+        }	
+      });	
+  })
+}
+
 
 async function toggleAudio() {
 
@@ -25,11 +70,11 @@ async function toggleAudio() {
   if (!isPlaying) {
     initAudio();
 
-            const ctx = new AudioContext();
-
+    const ctx = new AudioContext();
     navigator.mediaDevices.getUserMedia( {audio: {
-    noiseSuppression: true,
-    echoCancellation: true, // Optional: Enable echo cancellation
+      deviceId : audioDevicesSelect.value,
+      noiseSuppression: true,
+      echoCancellation: true, // Optional: Enable echo cancellation
   }})
       .then(function(stream) {
             const gainNode = ctx.createGain();
